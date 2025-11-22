@@ -1,6 +1,6 @@
 PRTS - 系统工具箱
 <div align="center">
-[(https://imgchr.com/i/pZkN1rF)
+(https://imgchr.com/i/pZkN1rF)
 
 P  R  T  S
 
