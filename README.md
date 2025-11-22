@@ -1,6 +1,6 @@
 PRTS - 系统工具箱
 <div align="center">
-![PRTS Logo](/prts.jpg)
+<img src="prts.jpg" alt="PRTS Logo" width="400" height="auto">
 
 P  R  T  S
 
