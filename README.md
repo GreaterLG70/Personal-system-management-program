@@ -1,6 +1,6 @@
 PRTS - 系统工具箱
 <div align="center">
-![PRTS Logo](./prts.jpg)
+![PRTS Logo](https://i.imgchr.com/pZkN1rF.jpg)
 
 P  R  T  S
 
