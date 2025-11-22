@@ -141,6 +141,7 @@ text
 text
 
 PRTS/
+
 ├── core/                 # 核心功能模块
 
 │   ├── logger.py        # 日志系统
@@ -158,8 +159,6 @@ PRTS/
 └── main.py            # 程序入口
 
 构建项目
-
-bash
 
 # 使用构建脚本
 
