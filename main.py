@@ -1,73 +1,112 @@
-import os
 import sys
-import time
-from modules import ShutdownTool, SystemTools
+import os
+from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QBrush, QPixmap, QIcon
+
+# 添加当前目录到Python路径，确保可以导入core模块
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from ui_main import MainWindow
+from core import Logger, ShutdownTool, SystemTool, create_xiaoai_interface, get_package_info
 
 
-class SystemToolbox:
+def resource_path(relative_path):
+    """获取资源的绝对路径。在开发环境和打包后都能正常工作"""
+    try:
+        # PyInstaller 创建临时文件夹，将路径存储在 _MEIPASS 中
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    # 处理嵌套路径
+    if relative_path.startswith('styles/'):
+        # 对于样式文件，保持目录结构
+        return os.path.join(base_path, relative_path)
+    else:
+        # 对于根目录文件，直接返回
+        return os.path.join(base_path, relative_path)
+
+
+class SystemToolboxApp:
     def __init__(self):
-        self.shutdown_tool = ShutdownTool()
-        self.system_tools = SystemTools()
+        self.app = None
+        self.window = None
+        self.logger = None
+        self.xiaoai_interface = None
 
-    def clear_screen(self):
-        """更可靠的清屏方法"""
-        os.system('cls' if os.name == 'nt' else 'clear')
+    def initialize(self):
+        """初始化应用程序"""
+        try:
+            # 创建必要的目录
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            logs_dir = os.path.join(current_dir, 'logs')
+            config_dir = os.path.join(current_dir, 'config')
 
-    def display_header(self, title):
-        print("=" * 40)
-        print(f"          {title}")
-        print("=" * 40)
+            os.makedirs(logs_dir, exist_ok=True)
+            os.makedirs(config_dir, exist_ok=True)
 
-    def main_menu(self):
-        while True:
-            self.clear_screen()
-            self.display_header("系统工具箱 v1.0")
-            print("1. 定时关机工具")
-            print("2. 系统维护工具")
-            print("3. 退出程序")
-            print("          --------牧歌2025.11.5")
-            print("=" * 40)
+            # 创建Qt应用
+            self.app = QApplication(sys.argv)
+            self.app.setApplicationName("P  R  T  S")
+            self.app.setApplicationVersion("1.2.1")
 
-            try:
-                choice = input("请选择操作 (1-3): ").strip()
+            # 设置应用程序图标
+            icon_path = resource_path("icon.ico")
+            if os.path.exists(icon_path):
+                self.app.setWindowIcon(QIcon(icon_path))
+            else:
+                # 如果找不到图标，使用默认图标或跳过
+                print(f"警告: 图标文件未找到: {icon_path}")
 
-                if choice == '1':
-                    self.shutdown_menu()
-                elif choice == '2':
-                    self.system_maintenance_menu()
-                elif choice == '3':
-                    self.exit_program()
-                else:
-                    print("无效选择，请重新输入！")
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                print("\n检测到中断信号，退出程序...")
-                self.exit_program()
-            except Exception as e:
-                print(f"发生错误: {e}")
-                time.sleep(2)
+            # 初始化核心组件
+            self.logger = Logger()
+            self.xiaoai_interface = create_xiaoai_interface()
 
-    def shutdown_menu(self):
-        """定时关机菜单"""
-        self.shutdown_tool.run_menu()
+            # 显示启动信息
+            package_info = get_package_info()
+            self.logger.log(f"启动 {package_info['name']} v{package_info['version']}")
 
-    def system_maintenance_menu(self):
-        """系统维护菜单"""
-        self.system_tools.run_menu()
+            # 创建主窗口，传递资源路径函数
+            self.window = MainWindow(self.logger, self.xiaoai_interface, resource_path)
+            self.window.show()
 
-    def exit_program(self):
-        self.clear_screen()
-        print("=" * 40)
-        print("          感谢使用！")
-        print("=" * 40)
-        print("\n系统工具箱 - 牧歌")
-        print("版本：1.0")
-        print("日期：2025.11.5")
-        print("\n3秒后自动退出...")
-        time.sleep(3)
-        sys.exit(0)
+            return True
+
+        except Exception as e:
+            self.show_error_message(f"应用程序初始化失败: {str(e)}")
+            return False
+
+    def show_error_message(self, message):
+        """显示错误消息"""
+        try:
+            app = QApplication(sys.argv)
+            QMessageBox.critical(None, "启动错误", message)
+        except:
+            print(f"错误: {message}")
+
+    def run(self):
+        """运行应用程序"""
+        if self.initialize():
+            # 设置退出处理
+            self.app.aboutToQuit.connect(self.cleanup)
+
+            # 运行应用
+            return self.app.exec_()
+        else:
+            return 1
+
+    def cleanup(self):
+        """清理资源"""
+        if self.logger:
+            self.logger.log("应用程序退出")
 
 
-if __name__ == "__main__":
-    toolbox = SystemToolbox()
-    toolbox.main_menu()
+def main():
+    """主函数"""
+    app = SystemToolboxApp()
+    sys.exit(app.run())
+
+
+if __name__ == '__main__':
+    main()
